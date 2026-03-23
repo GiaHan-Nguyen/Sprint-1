@@ -1,45 +1,50 @@
-﻿using System;
+using System;
+using System.Data;
 
-namespace CalculatorApp
+namespace Calculator_Proj_App
 {
-    public class Calculator
+    public partial class Application : Form
     {
-        // Private fields (Encapsulation)
-        private double num1;
-        private double num2;
-
-        // Public methods
-        public double Add(double a, double b)
+        public Application()
         {
-            num1 = a;
-            num2 = b;
-            return num1 + num2;
+            InitializeComponent();
         }
 
-        public double Subtract(double a, double b)
+        private void AppendToCalculateString(object sender, EventArgs e)
         {
-            num1 = a;
-            num2 = b;
-            return num1 - num2;
-        }
-
-        public double Multiply(double a, double b)
-        {
-            num1 = a;
-            num2 = b;
-            return num1 * num2;
-        }
-
-        public double Divide(double a, double b)
-        {
-            if (b == 0)
+            Button invokedBtn = sender as Button;
+            if (invokedBtn != null)
             {
-                throw new DivideByZeroException("Cannot divide by zero.");
+                resultBox.Text += invokedBtn.Text;
             }
+        }
 
-            num1 = a;
-            num2 = b;
-            return num1 / num2;
+        private void ClearEntry(object sender, EventArgs e)
+        {
+            resultBox.Text = string.Empty;
+        }
+
+        private void EvaluateCalculation(object sender, EventArgs e)
+        {
+            string expression = resultBox.Text;
+            var result = new DataTable();
+            try
+            {
+                double evaluatedResult = Convert.ToDouble(result.Compute(expression, null));
+                if (double.IsInfinity(evaluatedResult) || double.IsNaN(evaluatedResult))
+                {
+                    MessageBox.Show("Expression was evaluated to be undefined.", "Evaluation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    resultBox.Text = string.Empty;
+                    return;
+                }
+                resultBox.Text = evaluatedResult.ToString();
+            }
+            catch (System.Data.SyntaxErrorException)
+            {
+                MessageBox.Show("Expression was not valid.", "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                resultBox.Text = string.Empty;
+            }
         }
     }
 }
+
