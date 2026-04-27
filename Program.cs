@@ -7,64 +7,68 @@ namespace Calculator_Proj_App
 {
     public partial class Application : Form
     {
-        
+
         List<string> history = new List<string>();
+        int cursorIndex = 0;
 
         public Application()
         {
             InitializeComponent();
 
-            resultBox.Focus(); 
+            resultBox.Focus();
             resultBox.SelectionStart = resultBox.Text.Length;
         }
 
-        
+        private void UpdateDisplay()
+        {
+            string cleanText = resultBox.Text.Replace("|", "");
+
+            cursorIndex = Math.Max(0, Math.Min(cursorIndex, cleanText.Length));
+
+            resultBox.Text = cleanText.Insert(cursorIndex, "|");
+        }
+
+
         private void AppendToCalculateString(object sender, EventArgs e)
         {
-            Button invokedBtn = sender as Button;
+            Button btn = sender as Button;
+            if (btn == null) return;
 
-            if (invokedBtn != null)
-            {
-                int cursorPos = resultBox.SelectionStart;
+            string cleanText = resultBox.Text.Replace("|", "");
 
-                resultBox.Text = resultBox.Text.Insert(cursorPos, invokedBtn.Text);
-                resultBox.SelectionStart = cursorPos + invokedBtn.Text.Length;
+            cursorIndex = Math.Max(0, Math.Min(cursorIndex, cleanText.Length));
 
-                resultBox.Focus();
-            }
+            cleanText = cleanText.Insert(cursorIndex, btn.Text);
+            cursorIndex += btn.Text.Length;
+
+            resultBox.Text = cleanText;
+            UpdateDisplay();
         }
-
         
+
+
         private void ClearEntry(object sender, EventArgs e)
         {
-            resultBox.Text = string.Empty;
+            resultBox.Text = "";
+            cursorIndex = 0;
+            UpdateDisplay();
         }
 
-        
+
         private void MoveLeft(object sender, EventArgs e)
         {
-            if (resultBox.SelectionStart > 0)
-            {
-                resultBox.SelectionStart--;
-            }
-
-            resultBox.SelectionLength = 0;
-            resultBox.Focus();
+            cursorIndex--;
+            UpdateDisplay();
         }
 
-        
+
         private void MoveRight(object sender, EventArgs e)
         {
-            if (resultBox.SelectionStart < resultBox.Text.Length)
-            {
-                resultBox.SelectionStart++;
-            }
-
-            resultBox.SelectionLength = 0; 
-            resultBox.Focus();
+            cursorIndex++;
+            UpdateDisplay();
         }
 
-        
+
         private void ShowHistory(object sender, EventArgs e)
         {
             if (history.Count == 0)
@@ -77,53 +81,54 @@ namespace Calculator_Proj_App
             MessageBox.Show(historyText, "History");
         }
 
-        
+
         private void sqrtBtn_Click(object sender, EventArgs e)
         {
-            int cursorPos = resultBox.SelectionStart;
+            string cleanText = resultBox.Text.Replace("|", "");
 
-            resultBox.Text = resultBox.Text.Insert(cursorPos, "√");
-            resultBox.SelectionStart = cursorPos + 1;
+            cleanText = cleanText.Insert(cursorIndex, "√");
+            cursorIndex++;
 
-            resultBox.Focus();
+            resultBox.Text = cleanText;
+            UpdateDisplay();
         }
 
-        
+
         private void leftBtn_Click(object sender, EventArgs e)
         {
             MoveLeft(sender, e);
             resultBox.Focus();
         }
 
-        
+
         private void rightBtn_Click(object sender, EventArgs e)
         {
             MoveRight(sender, e);
             resultBox.Focus();
         }
 
-        
+
         private void historyBtn_Click(object sender, EventArgs e)
         {
             ShowHistory(sender, e);
         }
 
-        
+
         private void EvaluateCalculation(object sender, EventArgs e)
         {
-            string expression = resultBox.Text;
+            string expression = resultBox.Text.Replace("|", "");
 
             try
             {
                 double evaluatedResult;
 
-                
+
                 if (expression.StartsWith("√"))
                 {
                     double num = Convert.ToDouble(expression.Substring(1));
                     evaluatedResult = Math.Sqrt(num);
                 }
-                
+
                 else if (expression.Contains("^"))
                 {
                     string[] parts = expression.Split('^');
@@ -139,7 +144,7 @@ namespace Calculator_Proj_App
                     evaluatedResult = Convert.ToDouble(result.Compute(expression, null));
                 }
 
-                
+
                 if (double.IsInfinity(evaluatedResult) || double.IsNaN(evaluatedResult))
                 {
                     MessageBox.Show("Invalid calculation.", "Error");
@@ -147,7 +152,7 @@ namespace Calculator_Proj_App
                     return;
                 }
 
-                
+
                 string fullExpression = expression + " = " + evaluatedResult;
                 history.Insert(0, fullExpression);
 
@@ -157,6 +162,8 @@ namespace Calculator_Proj_App
                 }
 
                 resultBox.Text = evaluatedResult.ToString();
+                cursorIndex = resultBox.Text.Length;
+                UpdateDisplay();
                 resultBox.Focus();
             }
             catch
@@ -168,4 +175,3 @@ namespace Calculator_Proj_App
         }
     }
 }
-
